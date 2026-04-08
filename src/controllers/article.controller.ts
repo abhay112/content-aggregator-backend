@@ -25,11 +25,14 @@ import { catchAsync } from '@utils/catchAsync';
  *         description: List of articles retrieved successfully
  */
 export const getArticles = catchAsync(async (req: Request, res: Response) => {
-    const { page, limit, source, sortBy, order } = req.query;
+    const { page, limit, source, sortBy, order, q, search, saved } = req.query;
+
     const result = await ArticleService.getArticles({
         page: Number(page) || 1,
         limit: Number(limit) || 20,
         source: source as string,
+        q: ((q || search) as string)?.trim(),
+        saved: saved === 'true' ? true : undefined,
         sortBy: sortBy as any,
         order: order as any,
     });
@@ -68,6 +71,30 @@ export const getArticleById = catchAsync(async (req: Request, res: Response) => 
 
 /**
  * @swagger
+ * /api/v1/articles/{id}/bookmark:
+ *   post:
+ *     summary: Toggle bookmark status for an article
+ *     tags: [Articles]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Article bookmarked status toggled
+ */
+export const toggleBookmark = catchAsync(async (req: Request, res: Response) => {
+    const article = await ArticleService.toggleBookmark(req.params.id);
+    if (!article) {
+        throw new AppError('Article not found', 404, 'ARTICLE_NOT_FOUND');
+    }
+    const status = article.isBookmarked ? 'bookmarked' : 'unbookmarked';
+    sendSuccess(res, article, { message: `Article ${status} successfully` } as any);
+});
+
+/**
+ * @swagger
  * /api/v1/refresh:
  *   post:
  *     summary: Manually trigger a refresh for all active sources
@@ -80,3 +107,4 @@ export const refreshArticles = catchAsync(async (req: Request, res: Response) =>
     const result = await ArticleService.refreshArticles();
     sendSuccess(res, result);
 });
+

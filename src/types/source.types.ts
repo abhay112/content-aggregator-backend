@@ -6,5 +6,6 @@ export interface CreateSourceInput {
     name: string;
     slug: string;
     apiUrl: string;
-    isActive?: boolean;
+    active?: boolean;
 }
+

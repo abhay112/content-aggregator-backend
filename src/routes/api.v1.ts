@@ -10,6 +10,8 @@ const router = Router();
 // Article routes
 router.get('/articles', validate(articleQuerySchema, 'query'), ArticleController.getArticles);
 router.get('/articles/:id', ArticleController.getArticleById);
+router.post('/articles/:id/bookmark', ArticleController.toggleBookmark);
+
 
 // Source routes
 router.get('/sources', SourceController.getSources);

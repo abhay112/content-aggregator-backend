@@ -7,29 +7,35 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Article {
-  id          String   @id @default(uuid())
-  externalId  String?
-  title       String
-  url         String   @unique
-  source      String
-  author      String   @default("Unknown")
-  summary     String   @default("")
-  publishedAt DateTime
-  fetchedAt   DateTime @default(now())
-  tags        String[]
-
-  @@index([source])
-  @@index([publishedAt])
-}
-
 model Source {
   id            String    @id @default(uuid())
   name          String
   slug          String    @unique
   apiUrl        String
-  isActive      Boolean   @default(true)
+  active        Boolean   @default(true)
   lastFetchedAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([slug])
+}
+
+model Article {
+  id           String   @id @default(uuid())
+  externalId   String?
+  title        String
+  url          String   @unique
+  author       String?
+  source       String
+  summary      String?
+  tags         String[]
+  publishedAt  DateTime
+  fetchedAt    DateTime @default(now())
+  isBookmarked Boolean  @default(false)
+  keywords     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([source])
+  @@index([publishedAt])
 }

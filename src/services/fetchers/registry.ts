@@ -1,13 +1,13 @@
 import { NormalizedArticle } from '@appTypes/article.types';
 import { genericFetcher } from '@utils/fetcher.utils';
 
-
 export const fetchHN = (apiUrl: string): Promise<NormalizedArticle[]> => {
+    const itemBaseUrl = process.env.HN_ITEM_BASE_URL || 'https://news.ycombinator.com/item?id=';
     return genericFetcher(apiUrl, 'hacker-news', (data: any) =>
         (data.hits || []).map((hit: any) => ({
             externalId: hit.objectID,
             title: hit.title,
-            url: hit.url || `https://news.ycombinator.com/item?id=${hit.objectID}`,
+            url: hit.url || `${itemBaseUrl}${hit.objectID}`,
             source: 'hacker-news',
             author: hit.author || 'Unknown',
             summary: '',
@@ -33,11 +33,12 @@ export const fetchDevTo = (apiUrl: string): Promise<NormalizedArticle[]> => {
 };
 
 export const fetchReddit = (apiUrl: string): Promise<NormalizedArticle[]> => {
+    const redditBaseUrl = process.env.REDDIT_BASE_URL || 'https://reddit.com';
     return genericFetcher(apiUrl, 'reddit-programming', (data: any) =>
         (data.data?.children || []).map((post: any) => ({
             externalId: post.data.id,
             title: post.data.title,
-            url: `https://reddit.com${post.data.permalink}`,
+            url: post.data.url?.startsWith('http') ? post.data.url : `${redditBaseUrl}${post.data.permalink}`,
             source: `reddit-programming`,
             author: post.data.author || 'Unknown',
             summary: '',

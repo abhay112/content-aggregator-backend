@@ -17,6 +17,10 @@ export interface ArticleQueryParams {
     page?: number;
     limit?: number;
     source?: string;
+    q?: string;
+    saved?: boolean;
     sortBy?: 'publishedAt' | 'fetchedAt';
     order?: 'asc' | 'desc';
 }
+
+

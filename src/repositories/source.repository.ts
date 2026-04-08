@@ -1,11 +1,12 @@
 import { prisma } from '@config/database';
 import { CreateSourceInput, SourceType } from '@appTypes/source.types';
 
-export const findAll = async (isActive?: boolean): Promise<SourceType[]> => {
+export const findAll = async (active?: boolean): Promise<SourceType[]> => {
     return prisma.source.findMany({
-        where: isActive === undefined ? {} : { isActive },
+        where: active === undefined ? {} : { active },
     });
 };
+
 
 export const create = async (data: CreateSourceInput): Promise<SourceType> => {
     return prisma.source.create({

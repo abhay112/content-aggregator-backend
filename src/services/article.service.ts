@@ -14,6 +14,11 @@ export const getArticleById = async (id: string) => {
     return ArticleRepository.findById(id);
 };
 
+export const toggleBookmark = async (id: string) => {
+    return ArticleRepository.toggleBookmark(id);
+};
+
+
 export const refreshArticles = async (sourceSlug?: string) => {
     const fetcherMap: Record<string, (url: string) => Promise<any[]>> = {
         'hacker-news': ArticleFetchers.fetchHN,
