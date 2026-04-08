@@ -7,7 +7,9 @@ export interface ApiResponse {
         page?: number;
         limit?: number;
         total?: number;
+        message?: string;
     };
+
     error?: {
         message: string;
         code: string;

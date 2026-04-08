@@ -1,34 +1,33 @@
 import { Request, Response, NextFunction } from 'express';
-import { ZodSchema } from 'zod';
-import { AppError } from './errorHandler';
+import { ZodSchema, ZodError } from 'zod';
+import { sendError } from '@utils/response';
 
-/**
- * Validates request body, query params, or route params using a Zod schema.
- * Throws AppError(400) on validation failure.
- *
- * NOTE: In Express 5, req.query is a read-only getter and cannot be reassigned.
- * We skip the write-back for 'query' — validation has passed so req.query is safe to use as-is.
- */
-export const validate = (
-    schema: ZodSchema,
-    property: 'body' | 'query' | 'params' = 'body'
-) => {
-    return (req: Request, res: Response, next: NextFunction) => {
-        const result = schema.safeParse(req[property]);
 
-        if (!result.success) {
-            const errorMessages = result.error.issues.map((issue) => ({
-                field: issue.path.join('.'),
-                message: issue.message,
-            }));
-            return next(new AppError('Validation failure', 400, 'VALIDATION_FAILED', errorMessages as any));
+export const validate = (schema: ZodSchema, property: 'body' | 'query' | 'params') =>
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const validated = await schema.parseAsync(req[property]);
+
+            // Workaround for read-only properties like req.query in Express 5 / some environments
+            if (property === 'query' || property === 'params') {
+                for (const key in req[property]) {
+                    delete req[property][key];
+                }
+                Object.assign(req[property], validated);
+            } else {
+                req[property] = validated;
+            }
+
+            next();
+        } catch (error: any) {
+            if (error instanceof ZodError || error.name === 'ZodError') {
+                const errors = error.errors?.map((err: any) => ({
+                    field: err.path.join('.'),
+                    message: err.message
+                })) || [];
+                sendError(res, 'Validation Error', 'VALIDATION_ERROR', 400, errors);
+                return;
+            }
+            next(error);
         }
-
-        // req.query is read-only in Express 5 / Node 20+ — skip assignment for it
-        if (property === 'body' || property === 'params') {
-            (req as any)[property] = result.data;
-        }
-
-        next();
     };
-};

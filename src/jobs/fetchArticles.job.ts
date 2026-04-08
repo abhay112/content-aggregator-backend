@@ -16,7 +16,8 @@ export const startFetchJob = () => {
         logger.info({ job: JOB_NAME, startTime }, 'Starting background fetch articles job');
 
         try {
-            const result = await ArticleService.refreshArticles();
+            const result = await ArticleService.triggerRefresh();
+
             const endTime = new Date();
             const duration = (endTime.getTime() - startTime.getTime()) / 1000;
 

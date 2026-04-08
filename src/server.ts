@@ -52,9 +52,10 @@ const startServer = async (): Promise<void> => {
 
         // 5. Trigger initial fetch immediately on startup
         logger.info('Performing initial content fetch...');
-        ArticleService.refreshArticles()
-            .then(res => logger.info({ res }, 'Initial fetch completed'))
-            .catch(err => logger.error({ err }, 'Initial startup tasks failed'));
+        ArticleService.triggerRefresh()
+            .then((res: any) => logger.info({ res }, 'Initial fetch completed'))
+            .catch((err: any) => logger.error({ err }, 'Initial startup tasks failed'));
+
 
     } catch (error) {
         logger.fatal({ err: error }, 'Failed to start server');
