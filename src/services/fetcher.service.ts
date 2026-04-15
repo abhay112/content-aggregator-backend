@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { prisma } from '@config/database';
+import { retryRequest } from '@utils/retryRequest';
+import { articlesFetchedTotal, fetchFailuresTotal } from '@utils/metrics';
 
 interface NormalizedArticle {
     title: string;
@@ -133,17 +135,34 @@ export const runAllFetchers = async (): Promise<void> => {
 
             try {
                 console.log(`[Fetcher] Fetching: ${source.name} (${source.apiUrl})`);
-                const articles = await logic(source.apiUrl);
+                
+                const articles = await retryRequest(
+                    () => logic(source.apiUrl).then(data => ({ data } as any)),
+                    3,
+                    1000,
+                    source.slug
+                ).then(res => res.data as NormalizedArticle[]);
+
                 if (articles.length > 0) {
                     await saveArticles(articles);
                     console.log(`[Fetcher] Saved ${articles.length} articles from ${source.name}`);
+                    
+                    // Update articles fetched metric
+                    articlesFetchedTotal.inc({ source: source.slug }, articles.length);
+
                     await prisma.source.update({
                         where: { id: source.id },
                         data: { lastFetchedAt: new Date() }
                     });
                 }
-            } catch (err) {
-                console.error(`[Fetcher] Failed to refresh source ${source.name}:`, (err as Error).message);
+            } catch (err: any) {
+                console.error(`[Fetcher] Failed to refresh source ${source.name}:`, err.message);
+                
+                // Update fetch failure metric
+                fetchFailuresTotal.inc({ 
+                    source: source.slug, 
+                    error_type: err.code || 'UNKNOWN_ERROR' 
+                });
             }
         }
     } catch (err) {

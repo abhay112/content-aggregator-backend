@@ -40,10 +40,21 @@ export const fetchFailuresTotal = new client.Counter({
     labelNames: ['source', 'error_type'],
 });
 
-// Cron job last run timestamp
 export const cronJobLastRunTimestamp = new client.Gauge({
     name: 'cron_job_last_run_timestamp',
-    help: 'Timestamp of the last cron job run',
+    help: 'Timestamp of the last cron job run in seconds',
+    labelNames: ['job_name'],
+});
+
+export const cronJobSuccessTotal = new client.Counter({
+    name: 'cron_job_success_total',
+    help: 'Total number of successful cron job runs',
+    labelNames: ['job_name'],
+});
+
+export const cronJobFailureTotal = new client.Counter({
+    name: 'cron_job_failure_total',
+    help: 'Total number of failed cron job runs',
     labelNames: ['job_name'],
 });
 

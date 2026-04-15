@@ -1,7 +1,7 @@
 import cron from 'node-cron';
 import { logger } from '@utils/logger';
 import * as ArticleService from '@services/article.service';
-import { cronJobLastRunTimestamp } from '@utils/metrics';
+import { cronJobLastRunTimestamp, cronJobSuccessTotal, cronJobFailureTotal } from '@utils/metrics';
 
 const JOB_NAME = 'fetchArticlesJob';
 
@@ -27,8 +27,9 @@ export const startFetchJob = () => {
                 result
             }, 'Successfully completed background fetch articles job');
 
-            // Update Prometheus gauge
-            cronJobLastRunTimestamp.set({ job_name: JOB_NAME }, Date.now());
+            // Update Prometheus metrics
+            cronJobLastRunTimestamp.set({ job_name: JOB_NAME }, Math.floor(Date.now() / 1000));
+            cronJobSuccessTotal.inc({ job_name: JOB_NAME });
 
         } catch (error: any) {
             logger.error({
@@ -36,6 +37,9 @@ export const startFetchJob = () => {
                 error: error.message,
                 stack: error.stack
             }, 'Failed to execute background fetch articles job');
+
+            // Increment failure counter
+            cronJobFailureTotal.inc({ job_name: JOB_NAME });
         }
     });
 

@@ -8,7 +8,6 @@ export const validate = (schema: ZodSchema, property: 'body' | 'query' | 'params
         try {
             const validated = await schema.parseAsync(req[property]);
 
-            // Workaround for read-only properties like req.query in Express 5 / some environments
             if (property === 'query' || property === 'params') {
                 for (const key in req[property]) {
                     delete req[property][key];
